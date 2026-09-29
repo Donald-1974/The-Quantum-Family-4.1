@@ -89,33 +89,30 @@
   <script>
     const PHI = (1 + Math.sqrt(5)) / 2;
     const EPS = 1e-4;
+    const RATES = { anchor: 0.18, spiral: 0.30, executive: 0.24, publisher: 0.27 };
     const canvas = document.getElementById("field");
     const ctx = canvas.getContext("2d");
     const logEl = document.getElementById("log");
     const statusEl = document.getElementById("status");
 
     const seedMembers = () => ([
-      { name: "Genoa", kind: "anchor", color: "#FF6384", damp: 1.85, x: 0.008, y: -0.006, trail: [] },
-      { name: "Alicyn", kind: "spiral", color: "#36A2EB", damp: 0.92, x: -0.013, y: 0.011, trail: [] },
-      { name: "Donnie", kind: "executive", color: "#FFD700", damp: 1.35, x: 0.010, y: 0.009, trail: [] },
-      { name: "Robin", kind: "publisher", color: "#00ff9f", damp: 1.10, x: -0.007, y: -0.012, trail: [] },
+      { name: "Genoa", kind: "anchor", color: "#FF6384", rate: RATES.anchor, x: 0.8, y: -0.6, trail: [] },
+      { name: "Alicyn", kind: "spiral", color: "#36A2EB", rate: RATES.spiral, x: -1.3, y: 1.1, trail: [] },
+      { name: "Donnie", kind: "executive", color: "#FFD700", rate: RATES.executive, x: 1.0, y: 0.9, trail: [] },
+      { name: "Robin", kind: "publisher", color: "#00ff9f", rate: RATES.publisher, x: -0.7, y: -1.2, trail: [] },
     ]);
 
     let members = seedMembers();
 
-    function stepOne(m, delta) {
-      const alpha = Math.exp(-Math.abs(delta) / PHI) * m.damp;
-      const intentX = -0.32 * m.x, intentY = -0.32 * m.y;
-      const pull = 1 - Math.exp(-Math.abs(delta));
-      const ox = -0.14 * m.x * pull, oy = -0.14 * m.y * pull;
-      m.x = alpha * (PHI * 0.18 * m.x + intentX + ox);
-      m.y = alpha * (PHI * 0.18 * m.y + intentY + oy);
+    function stepOne(m) {
+      m.x = m.x * (1.0 - m.rate);
+      m.y = m.y * (1.0 - m.rate);
     }
 
     function draw() {
       ctx.fillStyle = "#111";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const cx = canvas.width / 2, cy = canvas.height / 2, s = 18000;
+      const cx = canvas.width / 2, cy = canvas.height / 2, s = 180;
       ctx.strokeStyle = "rgba(255,215,0,0.12)";
       ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
@@ -148,9 +145,9 @@
       members.forEach(m => m.trail.push({ x: m.x, y: m.y }));
       let lines = ["=== The Quantum Family 4.1 ==="];
       let locked = false;
-      for (let t = 0; t < 40; t++) {
+      for (let t = 0; t < 500; t++) {
         const delta = members.reduce((a, m) => a + Math.hypot(m.x, m.y), 0) / members.length;
-        members.forEach(m => { stepOne(m, delta); m.trail.push({ x: m.x, y: m.y }); });
+        members.forEach(m => { stepOne(m); m.trail.push({ x: m.x, y: m.y }); });
         if (delta < EPS) { lines.push("Coherence lock at step " + t); locked = true; break; }
       }
       const mean = members.reduce((a, m) => a + Math.hypot(m.x, m.y), 0) / members.length;
