@@ -70,13 +70,13 @@ $$
 \phi = \frac{1 + \sqrt{5}}{2}
 $$
 
-Family step (same structure as Z_AG* Φ-Genesis)
+Family step — gentle role-scaled contraction toward the origin:
 
 $$
-\mathbf{z}_{t+1} = \alpha(\Delta\phi)\,\big(\phi\,\mathbf{z}_t + \nabla_{\text{intent}} + \Omega_{\text{pull}}\big)
+\mathbf{z}_{t+1} = (1 - r_{\text{kind}})\,\mathbf{z}_t
 $$
 
-Coherence lock when mean distance to the origin drops below $\varepsilon_\phi$.
+where the contraction rate $r$ is role-specific: anchor $0.18$, spiral $0.30$, executive $0.24$, publisher $0.27$. Coherence lock when mean distance to the origin drops below $\varepsilon_\phi = 10^{-4}$ (typically around step 40).
 
 Full axiomatic write-up lives in [ZAG-Core / docs/Formal_Specification.md](https://github.com/Donald-1974/ZAG-Core/blob/main/docs/Formal_Specification.md).
 
@@ -87,6 +87,7 @@ Full axiomatic write-up lives in [ZAG-Core / docs/Formal_Specification.md](https
 - [x] Public repository
 - [x] Full README
 - [x] Family app (Python + browser)
+- [x] Lattice convergence fix (gentle contraction, locks ~step 40)
 - [ ] GitHub Pages enable (Settings → Pages → Deploy from `main` / `/app` or `/docs`)
 - [ ] QuTiP / NetworkX family backend
 - [ ] Grant and investor packet templates

@@ -12,15 +12,24 @@ Computational only. No biological interpretation.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 PHI = (1 + np.sqrt(5)) / 2
 EPS_PHI = 1e-4
-N_STEPS = 40
+N_STEPS = 500
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Role-scaled contraction rates. Tuned so the lattice converges visibly
+# (locks ~step 40) instead of collapsing instantly or stalling.
+RATES = {
+    "anchor": 0.18,
+    "spiral": 0.30,
+    "executive": 0.24,
+    "publisher": 0.27,
+}
 
 
 @dataclass
@@ -31,31 +40,21 @@ class Member:
     color: str
     marker: str
     z: np.ndarray
-
-    @property
-    def damping(self) -> float:
-        return {
-            "anchor": 1.85,
-            "spiral": 0.92,
-            "executive": 1.35,
-            "publisher": 1.10,
-        }[self.kind]
+    rate: float = field(default=0.0, repr=False)
 
 
-def phi_step(z: np.ndarray, delta_phi: float, member: Member) -> np.ndarray:
-    alpha = np.exp(-abs(delta_phi) / PHI) * member.damping
-    intent = -0.32 * z
-    omega = -0.14 * z * (1.0 - np.exp(-abs(delta_phi)))
-    return alpha * (PHI * 0.18 * z + intent + omega)
+def phi_step(z: np.ndarray, member: Member) -> np.ndarray:
+    """Gentle contraction toward the origin, scaled by the member's rate."""
+    return z * (1.0 - member.rate)
 
 
 def family() -> list[Member]:
     rng = np.random.default_rng(41)
     return [
-        Member("Genoa", "Anchor / origin lock", "anchor", "#FF6384", "D", rng.normal(0, 0.008, 2)),
-        Member("Alicyn", "Spiral / exploration", "spiral", "#36A2EB", "o", rng.normal(0, 0.014, 2)),
-        Member("Donnie", "Executive / Ω check", "executive", "#FFD700", "s", rng.normal(0, 0.010, 2)),
-        Member("Robin", "Publisher / record", "publisher", "#00ff9f", "^", rng.normal(0, 0.011, 2)),
+        Member("Genoa", "Anchor / origin lock", "anchor", "#FF6384", "D", rng.normal(0, 0.8, 2), RATES["anchor"]),
+        Member("Alicyn", "Spiral / exploration", "spiral", "#36A2EB", "o", rng.normal(0, 1.4, 2), RATES["spiral"]),
+        Member("Donnie", "Executive / Ω check", "executive", "#FFD700", "s", rng.normal(0, 1.0, 2), RATES["executive"]),
+        Member("Robin", "Publisher / record", "publisher", "#00ff9f", "^", rng.normal(0, 1.1, 2), RATES["publisher"]),
     ]
 
 
@@ -69,7 +68,7 @@ def run() -> None:
         delta = float(np.mean(np.linalg.norm(stack, axis=1)))
         report.append(delta)
         for m in members:
-            m.z = phi_step(m.z, delta, m)
+            m.z = phi_step(m.z, m)
             history[m.name].append(m.z.copy())
         if delta < EPS_PHI:
             print(f"Coherence lock at step {step}")
